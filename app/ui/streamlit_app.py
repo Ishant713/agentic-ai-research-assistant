@@ -2,13 +2,17 @@ import sys
 import os
 import threading
 import time
+import socket
 import uvicorn
 import streamlit as st
 import requests
 
-# Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
 
 def run_api():
     try:
@@ -18,10 +22,11 @@ def run_api():
         print(f"FastAPI startup error: {e}")
 
 if "api_started" not in st.session_state:
-    thread = threading.Thread(target=run_api, daemon=True)
-    thread.start()
+    if not is_port_in_use(8000):
+        thread = threading.Thread(target=run_api, daemon=True)
+        thread.start()
+        time.sleep(3)
     st.session_state.api_started = True
-    time.sleep(3)
 
 st.title("Agentic AI Research Assistant")
 
@@ -39,14 +44,12 @@ if st.button("Generate"):
                     timeout=120
                 )
                 response.raise_for_status()
-
                 data = response.json()
                 answer = data.get("answer", "")
-
                 if answer:
                     st.write(answer)
                 else:
-                    st.warning("Backend returned no answer. Please try again or check the backend service.")
+                    st.warning("Backend returned no answer. Please try again.")
 
             except requests.exceptions.ConnectionError:
                 st.error("Backend is still starting up. Please wait a few seconds and try again.")

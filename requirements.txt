@@ -54,7 +54,7 @@ PyYAML
 tenacity
 tqdm
 
-
+torchvision
 
 
 
