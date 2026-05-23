@@ -6,17 +6,22 @@ import uvicorn
 import streamlit as st
 import requests
 
-# Add project root to Python path so 'app' module can be found
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add project root to path
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
 
 def run_api():
-    uvicorn.run("app.api.main:app", host="0.0.0.0", port=8000)
+    try:
+        from app.api.main import app as fastapi_app
+        uvicorn.run(fastapi_app, host="0.0.0.0", port=8000)
+    except Exception as e:
+        print(f"FastAPI startup error: {e}")
 
 if "api_started" not in st.session_state:
     thread = threading.Thread(target=run_api, daemon=True)
     thread.start()
     st.session_state.api_started = True
-    time.sleep(2)
+    time.sleep(3)
 
 st.title("Agentic AI Research Assistant")
 
